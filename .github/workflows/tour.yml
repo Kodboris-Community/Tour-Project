@@ -1,0 +1,38 @@
+name: Docker CI/CD Pipeline
+on:
+  push:
+    branches:
+      - jaiye/docker-tourproject
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.JAIYE_USERNAME }}
+          password: ${{ secrets.JAIYE_PASSWORD }}
+
+      - name: Build and push to Docker hub
+        uses: docker/build-push-action@v5
+        with:
+          file: dockerfile
+          context: .
+          push: true
+          tags: kingjaiye/tourproject:latest
+      - name: Login to the EC2
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+            host: ${{ secrets.JAIYE_HOST }}
+            username: ${{ secrets.VICTOR_USERNAME }}
+            key: ${{ secrets.JAIYE_KEY }}
+            port: ${{ secrets.PORT }}
+            script: |
+              docker stop tourproject || true
+              docker rm tourproject || true
+              docker pull ${{ secrets.JAIYE_USERNAME }}/tourproject:latest
+              docker run -d --name tourproject -p 4000:80 ${{ secrets.JAIYE_USERNAME }}/tourproject:latest
+              
