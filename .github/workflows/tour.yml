@@ -22,7 +22,7 @@ jobs:
           file: dockerfile
           context: .
           push: true
-          tags: kingjaiye/tourproject:latest
+          tags: kingjaiye/tourproject:${{ github.run_id }}
       - name: Login to the EC2
         uses: appleboy/ssh-action@v1.0.3
         with:
@@ -33,6 +33,6 @@ jobs:
             script: |
               docker stop tourproject || true
               docker rm tourproject || true
-              docker pull ${{ secrets.JAIYE_USERNAME }}/tourproject:latest
-              docker run -d --name tourproject -p 4000:80 ${{ secrets.JAIYE_USERNAME }}/tourproject:latest
+              docker pull ${{ secrets.JAIYE_USERNAME }}/tourproject:${{ github.run_id }}
+              docker run -d --name tourproject -p 4000:80 ${{ secrets.JAIYE_USERNAME }}/tourproject:${{ github.run_id }}
               
