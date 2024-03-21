@@ -1,0 +1,37 @@
+name: Docker CI/CD Pipeline
+on:
+  push:
+    branches:
+      - taiwo/Gitactions-tour-project-ass4
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.Taiwo_USERNAME }}
+          password: ${{ secrets.Taiwo_PASSWORD }}
+
+      - name: Build and push image
+        uses: docker/build-push-action@v5
+        with:
+          file: dockerfile
+          context: .
+          push: true
+          tags: tyrefic2k2/tyrefictourproject:${{ github.run_id }}
+      - name: Login to the EC2 instance
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+            host: ${{ secrets.Taiwo_HOST }}
+            username: ${{ secrets.Allen_USERNAME }}
+            key: ${{ secrets.Taiwo_KEY }}
+            port: ${{ secrets.PORT }}
+            script: |
+              docker stop Terra || true
+              docker rm Terra || true
+              docker pull ${{ secrets.Taiwo_USERNAME }}/tyrefictourproject:${{ github.run_id }}
+              docker run -d --name Terra -p 700:80 ${{ secrets.Taiwo_USERNAME }}/tyrefictourproject:${{ github.run_id }}
